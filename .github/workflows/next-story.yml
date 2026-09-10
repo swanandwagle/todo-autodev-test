@@ -1,4 +1,4 @@
-name: next-story
+﻿name: next-story
 
 on:
   pull_request:
@@ -16,25 +16,23 @@ jobs:
         shell: cmd
     env:
       ORCHESTRATOR: C:\Projects\ai-delivery-orchestrator
+      PYTHON: C:\Projects\ai-delivery-orchestrator\.venv\Scripts\python.exe
     steps:
       - uses: actions/checkout@v4
 
       - name: Mark merged story Done
         run: |
-          call %ORCHESTRATOR%\.venv\Scripts\activate.bat
           cd %ORCHESTRATOR%
-          python -m orchestrator.cli.jira_mark_done --project todo-autodev-test --pr "${{ github.event.pull_request.number }}"
+          %PYTHON% -m orchestrator.cli.jira_mark_done --project todo-autodev-test --pr "${{ github.event.pull_request.number }}"
 
       - name: Check dependency gate
         id: gate
         run: |
-          call %ORCHESTRATOR%\.venv\Scripts\activate.bat
           cd %ORCHESTRATOR%
-          for /f %%i in ('python -m orchestrator.cli.dependency_gate_check --project todo-autodev-test') do echo clear=%%i >> %GITHUB_OUTPUT%
+          for /f %%i in ('%PYTHON% -m orchestrator.cli.dependency_gate_check --project todo-autodev-test') do echo clear=%%i >> %GITHUB_OUTPUT%
 
       - name: Run next story
         if: steps.gate.outputs.clear == 'true'
         run: |
-          call %ORCHESTRATOR%\.venv\Scripts\activate.bat
           cd %ORCHESTRATOR%
-          python -m orchestrator.cli.run_next_story --project todo-autodev-test
+          %PYTHON% -m orchestrator.cli.run_next_story --project todo-autodev-test
