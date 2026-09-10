@@ -1,11 +1,13 @@
 package com.example.todo.domain;
 
 import com.example.todo.AbstractIntegrationTest;
+import com.example.todo.repository.TaskRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -94,19 +96,20 @@ class TaskSchemaIntegrationTest extends AbstractIntegrationTest {
     // AC9: updated_at is updated by trigger when row is updated without explicit updated_at
     @Test
     void updateRow_triggerSetsUpdatedAt() throws InterruptedException {
+        UUID id = UUID.randomUUID();
         jdbcTemplate.execute(
-            "INSERT INTO tasks (id, title, status, priority) VALUES (1, 'Original', 'TODO', 'MEDIUM')");
+            "INSERT INTO tasks (id, title, status, priority) VALUES ('" + id + "', 'Original', 'TODO', 'MEDIUM')");
 
         OffsetDateTime before = jdbcTemplate.queryForObject(
-            "SELECT updated_at FROM tasks WHERE id = 1", OffsetDateTime.class);
+            "SELECT updated_at FROM tasks WHERE id = '" + id + "'", OffsetDateTime.class);
 
         // Sleep long enough for now() to advance past the insert timestamp
         Thread.sleep(100);
 
-        jdbcTemplate.execute("UPDATE tasks SET title = 'Updated' WHERE id = 1");
+        jdbcTemplate.execute("UPDATE tasks SET title = 'Updated' WHERE id = '" + id + "'");
 
         OffsetDateTime after = jdbcTemplate.queryForObject(
-            "SELECT updated_at FROM tasks WHERE id = 1", OffsetDateTime.class);
+            "SELECT updated_at FROM tasks WHERE id = '" + id + "'", OffsetDateTime.class);
 
         assertThat(after).isAfter(before);
     }

@@ -33,6 +33,6 @@ public abstract class AbstractIntegrationTest {
 
     @BeforeEach
     void truncateTasks() {
-        jdbcTemplate.execute("TRUNCATE TABLE tasks RESTART IDENTITY CASCADE");
+        jdbcTemplate.execute("TRUNCATE TABLE tasks CASCADE");
     }
 }
