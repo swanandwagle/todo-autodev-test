@@ -44,6 +44,10 @@ public class Task {
     @Column(columnDefinition = "TEXT[]")
     private List<String> tags = new ArrayList<>();
 
+    @Column(name = "search_vector", insertable = false, updatable = false,
+            columnDefinition = "TSVECTOR")
+    private Object searchVector;
+
     @Version
     @Column(nullable = false)
     private Long version = 0L;
@@ -88,6 +92,8 @@ public class Task {
 
     public List<String> getTags() { return tags; }
     public void setTags(List<String> tags) { this.tags = tags != null ? tags : new ArrayList<>(); }
+
+    public Object getSearchVector() { return searchVector; }
 
     public Long getVersion() { return version; }
     public void setVersion(Long version) { this.version = version; }

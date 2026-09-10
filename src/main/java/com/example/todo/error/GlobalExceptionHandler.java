@@ -1,5 +1,9 @@
 package com.example.todo.error;
 
+import com.example.todo.exception.InvalidDateRangeException;
+import com.example.todo.exception.InvalidFilterException;
+import com.example.todo.exception.InvalidPaginationException;
+import com.example.todo.exception.InvalidSortException;
 import com.example.todo.exception.TaskNotFoundException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
@@ -91,6 +95,38 @@ public class GlobalExceptionHandler {
                                                              HttpServletRequest request) {
         ProblemDetail pd = ProblemDetailFactory.create(404, "TASK_NOT_FOUND", "Task not found",
                 ex.getMessage(), request);
+        return problemResponse(pd);
+    }
+
+    @ExceptionHandler(InvalidFilterException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidFilter(InvalidFilterException ex,
+                                                              HttpServletRequest request) {
+        ProblemDetail pd = ProblemDetailFactory.create(400, "INVALID_FILTER",
+                "Invalid filter combination", ex.getMessage(), request);
+        return problemResponse(pd);
+    }
+
+    @ExceptionHandler(InvalidDateRangeException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidDateRange(InvalidDateRangeException ex,
+                                                                 HttpServletRequest request) {
+        ProblemDetail pd = ProblemDetailFactory.create(400, "INVALID_DATE_RANGE",
+                "Invalid date range", ex.getMessage(), request);
+        return problemResponse(pd);
+    }
+
+    @ExceptionHandler(InvalidPaginationException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidPagination(InvalidPaginationException ex,
+                                                                   HttpServletRequest request) {
+        ProblemDetail pd = ProblemDetailFactory.create(400, "INVALID_PAGINATION",
+                "Invalid pagination parameters", ex.getMessage(), request);
+        return problemResponse(pd);
+    }
+
+    @ExceptionHandler(InvalidSortException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidSort(InvalidSortException ex,
+                                                            HttpServletRequest request) {
+        ProblemDetail pd = ProblemDetailFactory.create(400, "INVALID_SORT",
+                "Invalid sort parameters", ex.getMessage(), request);
         return problemResponse(pd);
     }
 
