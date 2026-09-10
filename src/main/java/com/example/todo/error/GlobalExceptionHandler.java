@@ -14,6 +14,7 @@ import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.List;
@@ -76,10 +77,19 @@ public class GlobalExceptionHandler {
         return problemResponse(pd);
     }
 
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ProblemDetail> handleTypeMismatch(MethodArgumentTypeMismatchException ex,
+                                                             HttpServletRequest request) {
+        ProblemDetail pd = ProblemDetailFactory.create(400, "INVALID_ID_FORMAT",
+                "Invalid ID format",
+                "Path variable '" + ex.getName() + "' is not a valid UUID.", request);
+        return problemResponse(pd);
+    }
+
     @ExceptionHandler(TaskNotFoundException.class)
-    public ResponseEntity<ProblemDetail> handleNotFound(TaskNotFoundException ex,
-                                                         HttpServletRequest request) {
-        ProblemDetail pd = ProblemDetailFactory.create(404, "NOT_FOUND", "Not found",
+    public ResponseEntity<ProblemDetail> handleTaskNotFound(TaskNotFoundException ex,
+                                                             HttpServletRequest request) {
+        ProblemDetail pd = ProblemDetailFactory.create(404, "TASK_NOT_FOUND", "Task not found",
                 ex.getMessage(), request);
         return problemResponse(pd);
     }
