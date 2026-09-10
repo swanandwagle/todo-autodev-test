@@ -46,8 +46,10 @@ public class TaskService {
         return PageResponse.from(page, TaskService::toResponse);
     }
 
+    private static final Specification<Task> ALWAYS_TRUE = (root, query, cb) -> cb.conjunction();
+
     private Specification<Task> buildSpecification(TaskListQuery q) {
-        Specification<Task> spec = Specification.where((Specification<Task>) null);
+        Specification<Task> spec = ALWAYS_TRUE;
 
         if (q.getStatus() != null && !q.getStatus().isEmpty()) {
             spec = spec.and(TaskSpecifications.hasStatuses(q.getStatus()));
