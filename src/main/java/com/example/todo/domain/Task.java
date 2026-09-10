@@ -58,7 +58,7 @@ public class Task {
 
     @PrePersist
     void prePersist() {
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now(java.time.ZoneOffset.UTC);
         if (createdAt == null) createdAt = now;
         if (updatedAt == null) updatedAt = now;
     }

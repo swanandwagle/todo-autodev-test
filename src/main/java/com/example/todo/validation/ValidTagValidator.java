@@ -7,7 +7,7 @@ import java.util.List;
 
 public class ValidTagValidator implements ConstraintValidator<ValidTag, List<String>> {
 
-    private static final java.util.regex.Pattern VALID_TAG = java.util.regex.Pattern.compile("^[a-z0-9_-]+$");
+    private static final java.util.regex.Pattern VALID_TAG = java.util.regex.Pattern.compile("^[a-z0-9][a-z0-9-]*$");
 
     @Override
     public boolean isValid(List<String> tags, ConstraintValidatorContext context) {
