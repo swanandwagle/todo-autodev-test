@@ -4,9 +4,14 @@ import com.example.todo.domain.Task;
 import com.example.todo.domain.TaskPriority;
 import com.example.todo.domain.TaskStatus;
 import com.example.todo.dto.CreateTaskRequest;
+import com.example.todo.dto.PageResponse;
+import com.example.todo.dto.TaskListQuery;
 import com.example.todo.dto.TaskResponse;
 import com.example.todo.exception.TaskNotFoundException;
+import com.example.todo.repository.TaskQueryRepository;
 import com.example.todo.repository.TaskRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,9 +26,61 @@ import java.util.UUID;
 public class TaskService {
 
     private final TaskRepository taskRepository;
+    private final TaskQueryRepository taskQueryRepository;
+    private final TaskListQueryValidator queryValidator;
 
-    public TaskService(TaskRepository taskRepository) {
+    public TaskService(TaskRepository taskRepository,
+                       TaskQueryRepository taskQueryRepository,
+                       TaskListQueryValidator queryValidator) {
         this.taskRepository = taskRepository;
+        this.taskQueryRepository = taskQueryRepository;
+        this.queryValidator = queryValidator;
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<TaskResponse> listTasks(TaskListQuery query) {
+        queryValidator.validate(query);
+
+        Specification<Task> spec = buildSpecification(query);
+        Page<Task> page = taskQueryRepository.findAll(spec, query);
+        return PageResponse.from(page, TaskService::toResponse);
+    }
+
+    private Specification<Task> buildSpecification(TaskListQuery q) {
+        Specification<Task> spec = Specification.where((Specification<Task>) null);
+
+        if (q.getStatus() != null && !q.getStatus().isEmpty()) {
+            spec = spec.and(TaskSpecifications.hasStatuses(q.getStatus()));
+        }
+        if (q.getPriority() != null && !q.getPriority().isEmpty()) {
+            spec = spec.and(TaskSpecifications.hasPriorities(q.getPriority()));
+        }
+        if (q.getDueFrom() != null) {
+            spec = spec.and(TaskSpecifications.dueDateFrom(q.getDueFrom()));
+        }
+        if (q.getDueTo() != null) {
+            spec = spec.and(TaskSpecifications.dueDateTo(q.getDueTo()));
+        }
+        if (q.getHasDueDate() != null) {
+            spec = spec.and(TaskSpecifications.hasDueDate(q.getHasDueDate()));
+        }
+        if (Boolean.TRUE.equals(q.getOverdue())) {
+            spec = spec.and(TaskSpecifications.isOverdue(LocalDate.now(ZoneOffset.UTC)));
+        }
+        if (q.getTags() != null && !q.getTags().isEmpty()) {
+            spec = spec.and(TaskSpecifications.tagsContainAll(q.getTags()));
+        }
+        if (q.getTagsAny() != null && !q.getTagsAny().isEmpty()) {
+            spec = spec.and(TaskSpecifications.tagsOverlapAny(q.getTagsAny()));
+        }
+        if (q.getQ() != null && !q.getQ().isBlank()) {
+            spec = spec.and(TaskSpecifications.fullTextSearch(q.getQ()));
+        }
+        if (q.getUpdatedSince() != null) {
+            spec = spec.and(TaskSpecifications.updatedSince(q.getUpdatedSince()));
+        }
+
+        return spec;
     }
 
     @Transactional(readOnly = true)
