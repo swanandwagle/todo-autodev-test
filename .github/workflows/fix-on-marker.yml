@@ -19,6 +19,7 @@ jobs:
         shell: cmd
     env:
       ORCHESTRATOR: C:\Projects\ai-delivery-orchestrator
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
