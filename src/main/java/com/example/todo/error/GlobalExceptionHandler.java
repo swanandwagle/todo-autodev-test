@@ -4,7 +4,9 @@ import com.example.todo.exception.InvalidDateRangeException;
 import com.example.todo.exception.InvalidFilterException;
 import com.example.todo.exception.InvalidPaginationException;
 import com.example.todo.exception.InvalidSortException;
+import com.example.todo.exception.InvalidStatusTransitionException;
 import com.example.todo.exception.TaskNotFoundException;
+import com.example.todo.exception.VersionConflictException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -127,6 +129,24 @@ public class GlobalExceptionHandler {
                                                             HttpServletRequest request) {
         ProblemDetail pd = ProblemDetailFactory.create(400, "INVALID_SORT",
                 "Invalid sort parameters", ex.getMessage(), request);
+        return problemResponse(pd);
+    }
+
+    @ExceptionHandler(VersionConflictException.class)
+    public ResponseEntity<ProblemDetail> handleVersionConflict(VersionConflictException ex,
+                                                                HttpServletRequest request) {
+        ProblemDetail pd = ProblemDetailFactory.create(409, "VERSION_CONFLICT",
+                "Version conflict", ex.getMessage(), request);
+        pd.setProperty("expectedVersion", ex.getExpected());
+        pd.setProperty("actualVersion", ex.getActual());
+        return problemResponse(pd);
+    }
+
+    @ExceptionHandler(InvalidStatusTransitionException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidStatusTransition(InvalidStatusTransitionException ex,
+                                                                        HttpServletRequest request) {
+        ProblemDetail pd = ProblemDetailFactory.create(409, "INVALID_STATUS_TRANSITION",
+                "Invalid status transition", ex.getMessage(), request);
         return problemResponse(pd);
     }
 

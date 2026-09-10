@@ -7,7 +7,9 @@ import com.example.todo.dto.CreateTaskRequest;
 import com.example.todo.dto.PageResponse;
 import com.example.todo.dto.TaskListQuery;
 import com.example.todo.dto.TaskResponse;
+import com.example.todo.dto.UpdateTaskRequest;
 import com.example.todo.exception.TaskNotFoundException;
+import com.example.todo.exception.VersionConflictException;
 import com.example.todo.repository.TaskQueryRepository;
 import com.example.todo.repository.TaskRepository;
 import org.springframework.data.domain.Page;
@@ -28,13 +30,16 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final TaskQueryRepository taskQueryRepository;
     private final TaskListQueryValidator queryValidator;
+    private final TaskStatusTransitionValidator transitionValidator;
 
     public TaskService(TaskRepository taskRepository,
                        TaskQueryRepository taskQueryRepository,
-                       TaskListQueryValidator queryValidator) {
+                       TaskListQueryValidator queryValidator,
+                       TaskStatusTransitionValidator transitionValidator) {
         this.taskRepository = taskRepository;
         this.taskQueryRepository = taskQueryRepository;
         this.queryValidator = queryValidator;
+        this.transitionValidator = transitionValidator;
     }
 
     @Transactional(readOnly = true)
@@ -46,8 +51,10 @@ public class TaskService {
         return PageResponse.from(page, TaskService::toResponse);
     }
 
+    private static final Specification<Task> ALWAYS_TRUE = (root, query, cb) -> cb.conjunction();
+
     private Specification<Task> buildSpecification(TaskListQuery q) {
-        Specification<Task> spec = Specification.where((Specification<Task>) null);
+        Specification<Task> spec = ALWAYS_TRUE;
 
         if (q.getStatus() != null && !q.getStatus().isEmpty()) {
             spec = spec.and(TaskSpecifications.hasStatuses(q.getStatus()));
@@ -106,6 +113,37 @@ public class TaskService {
 
         if (status == TaskStatus.DONE) {
             task.setCompletedAt(OffsetDateTime.now(ZoneOffset.UTC));
+        }
+
+        Task saved = taskRepository.save(task);
+        return toResponse(saved);
+    }
+
+    @Transactional
+    public TaskResponse replace(UUID id, UpdateTaskRequest req) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new TaskNotFoundException(id));
+
+        if (!task.getVersion().equals(req.getVersion())) {
+            throw new VersionConflictException(id, req.getVersion(), task.getVersion());
+        }
+
+        TaskStatus currentStatus = task.getStatus();
+        TaskStatus newStatus = req.getStatus();
+        transitionValidator.validate(currentStatus, newStatus);
+
+        task.setTitle(req.getTitle());
+        task.setDescription(req.getDescription());
+        task.setPriority(req.getPriority());
+        task.setDueDate(req.getDueDate());
+        task.setTags(req.getTags() != null ? req.getTags() : new ArrayList<>());
+        task.setStatus(newStatus);
+        task.setUpdatedAt(OffsetDateTime.now(ZoneOffset.UTC));
+
+        if (newStatus == TaskStatus.DONE && currentStatus != TaskStatus.DONE) {
+            task.setCompletedAt(OffsetDateTime.now(ZoneOffset.UTC));
+        } else if (newStatus != TaskStatus.DONE) {
+            task.setCompletedAt(null);
         }
 
         Task saved = taskRepository.save(task);

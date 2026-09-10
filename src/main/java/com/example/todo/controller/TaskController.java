@@ -6,6 +6,7 @@ import com.example.todo.dto.CreateTaskRequest;
 import com.example.todo.dto.PageResponse;
 import com.example.todo.dto.TaskListQuery;
 import com.example.todo.dto.TaskResponse;
+import com.example.todo.dto.UpdateTaskRequest;
 import com.example.todo.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -132,5 +133,28 @@ public class TaskController {
         TaskResponse response = taskService.create(request);
         URI location = ucb.path("/api/v1/tasks/{id}").buildAndExpand(response.getId()).toUri();
         return ResponseEntity.created(location).body(response);
+    }
+
+    @Operation(summary = "Replace a task (full update)")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Task replaced",
+                content = @Content(mediaType = "application/json",
+                        schema = @Schema(implementation = TaskResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Validation failed or malformed request",
+                content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(responseCode = "404", description = "Task not found",
+                content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(responseCode = "409", description = "Version conflict or invalid status transition",
+                content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(responseCode = "413", description = "Payload too large",
+                content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(responseCode = "415", description = "Unsupported media type",
+                content = @Content(mediaType = "application/problem+json"))
+    })
+    @PutMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<TaskResponse> replace(
+            @Parameter(description = "Task UUID") @PathVariable UUID id,
+            @Valid @RequestBody UpdateTaskRequest request) {
+        return ResponseEntity.ok(taskService.replace(id, request));
     }
 }
