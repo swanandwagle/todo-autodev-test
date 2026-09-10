@@ -28,7 +28,7 @@ jobs:
 
       - name: Check dependency gate
         id: gate
-        shell: pwsh
+        shell: powershell
         run: |
           & "$env:ORCHESTRATOR\.venv\Scripts\python.exe" -m orchestrator.cli.dependency_gate_check --project todo-autodev-test
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
