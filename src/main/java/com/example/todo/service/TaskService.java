@@ -5,6 +5,7 @@ import com.example.todo.domain.TaskPriority;
 import com.example.todo.domain.TaskStatus;
 import com.example.todo.dto.CreateTaskRequest;
 import com.example.todo.dto.TaskResponse;
+import com.example.todo.exception.TaskNotFoundException;
 import com.example.todo.repository.TaskRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class TaskService {
@@ -22,6 +24,13 @@ public class TaskService {
 
     public TaskService(TaskRepository taskRepository) {
         this.taskRepository = taskRepository;
+    }
+
+    @Transactional(readOnly = true)
+    public TaskResponse getById(UUID id) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new TaskNotFoundException(id));
+        return toResponse(task);
     }
 
     @Transactional
