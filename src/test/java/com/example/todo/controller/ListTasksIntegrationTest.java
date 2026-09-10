@@ -324,22 +324,23 @@ class ListTasksIntegrationTest extends AbstractIntegrationTest {
     // -------------------------------------------------------------------------
     @Test
     void explainAnalyze_statusAndDueDateFilter_usesIndex() {
-        String plan = jdbcTemplate.queryForObject(
+        // EXPLAIN ANALYZE returns one row per plan line — collect all rows and verify non-empty.
+        // ix_tasks_status_due_date should be available (may show Seq Scan on tiny test data).
+        java.util.List<String> planLines = jdbcTemplate.queryForList(
                 "EXPLAIN ANALYZE SELECT * FROM tasks WHERE status = 'TODO' AND due_date IS NOT NULL",
                 String.class);
-        // ix_tasks_status_due_date should be used
-        // Note: in a small table EXPLAIN may choose sequential scan; this test just documents
-        // that the index exists and the query structure is valid
-        assert plan != null : "EXPLAIN ANALYZE returned null";
+        org.junit.jupiter.api.Assertions.assertFalse(planLines.isEmpty(),
+                "EXPLAIN ANALYZE returned no plan rows");
     }
 
     @Test
     void explainAnalyze_overdueFilter_usesPartialIndex() {
-        String plan = jdbcTemplate.queryForObject(
+        // ix_tasks_open_due_date partial index (WHERE status IN ('TODO','IN_PROGRESS')) should be available.
+        java.util.List<String> planLines = jdbcTemplate.queryForList(
                 "EXPLAIN ANALYZE SELECT * FROM tasks WHERE status IN ('TODO','IN_PROGRESS') AND due_date < CURRENT_DATE",
                 String.class);
-        // ix_tasks_open_due_date partial index should be available
-        assert plan != null : "EXPLAIN ANALYZE returned null";
+        org.junit.jupiter.api.Assertions.assertFalse(planLines.isEmpty(),
+                "EXPLAIN ANALYZE returned no plan rows");
     }
 
     // -------------------------------------------------------------------------
