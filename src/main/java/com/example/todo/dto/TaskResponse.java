@@ -1,69 +1,52 @@
-package com.example.todo.domain;
+package com.example.todo.dto;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.UuidGenerator;
-import org.hibernate.type.SqlTypes;
+import com.example.todo.domain.TaskPriority;
+import com.example.todo.domain.TaskStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Entity
-@Table(name = "tasks")
-public class Task {
+@Schema(description = "Task representation returned by the API")
+public class TaskResponse {
 
-    @Id
-    @UuidGenerator(style = UuidGenerator.Style.AUTO)
-    @Column(updatable = false, nullable = false)
+    @Schema(description = "Unique task identifier")
     private UUID id;
 
-    @Column(nullable = false)
+    @Schema(description = "Task title")
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+    @Schema(description = "Task description")
     private String description;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TaskStatus status = TaskStatus.TODO;
+    @Schema(description = "Task status")
+    private TaskStatus status;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TaskPriority priority = TaskPriority.MEDIUM;
+    @Schema(description = "Task priority")
+    private TaskPriority priority;
 
-    @Column(name = "due_date")
+    @Schema(description = "Due date")
     private LocalDate dueDate;
 
-    @Column(name = "completed_at")
+    @Schema(description = "Timestamp when the task was completed")
     private OffsetDateTime completedAt;
 
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(columnDefinition = "TEXT[]")
-    private List<String> tags = new ArrayList<>();
+    @Schema(description = "Tags associated with the task")
+    private List<String> tags;
 
-    @Version
-    @Column(nullable = false)
-    private Long version = 0L;
+    @Schema(description = "Optimistic lock version")
+    private Long version;
 
-    @Column(name = "created_at", nullable = false, updatable = false,
-            columnDefinition = "TIMESTAMPTZ")
+    @Schema(description = "Whether the task is overdue")
+    private boolean overdue;
+
+    @Schema(description = "Creation timestamp")
     private OffsetDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false,
-            columnDefinition = "TIMESTAMPTZ")
+    @Schema(description = "Last update timestamp")
     private OffsetDateTime updatedAt;
-
-    @PrePersist
-    void prePersist() {
-        OffsetDateTime now = OffsetDateTime.now(java.time.ZoneOffset.UTC);
-        if (createdAt == null) createdAt = now;
-        if (updatedAt == null) updatedAt = now;
-    }
-
-    // Getters and setters
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
@@ -87,10 +70,13 @@ public class Task {
     public void setCompletedAt(OffsetDateTime completedAt) { this.completedAt = completedAt; }
 
     public List<String> getTags() { return tags; }
-    public void setTags(List<String> tags) { this.tags = tags != null ? tags : new ArrayList<>(); }
+    public void setTags(List<String> tags) { this.tags = tags; }
 
     public Long getVersion() { return version; }
     public void setVersion(Long version) { this.version = version; }
+
+    public boolean isOverdue() { return overdue; }
+    public void setOverdue(boolean overdue) { this.overdue = overdue; }
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
