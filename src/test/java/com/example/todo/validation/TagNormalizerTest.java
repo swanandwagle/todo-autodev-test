@@ -45,4 +45,18 @@ class TagNormalizerTest {
         assertEquals(List.of("a", "b", "c"),
                 TagNormalizer.normalize(List.of("A", "B", "C", "a", "b")));
     }
+
+    // AC1: ["Finance", " finance ", "FINANCE"] → ["finance"]
+    @Test
+    void ac1_mixedCaseAndWhitespace_collapsesToSingleEntry() {
+        assertEquals(List.of("finance"),
+                TagNormalizer.normalize(List.of("Finance", " finance ", "FINANCE")));
+    }
+
+    // AC2: ["work", "Work", "urgent"] → ["work", "urgent"] (first-seen casing, order preserved)
+    @Test
+    void ac2_firstSeenCasingPreserved_orderRetained() {
+        assertEquals(List.of("work", "urgent"),
+                TagNormalizer.normalize(List.of("work", "Work", "urgent")));
+    }
 }
