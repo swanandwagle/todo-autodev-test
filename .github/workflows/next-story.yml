@@ -3,10 +3,11 @@ name: next-story
 on:
   pull_request:
     types: [closed]
+  workflow_dispatch:
 
 jobs:
   advance:
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
     runs-on: self-hosted
     concurrency:
       group: story-loop
