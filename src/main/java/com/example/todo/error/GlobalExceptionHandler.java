@@ -1,5 +1,6 @@
 package com.example.todo.error;
 
+import com.example.todo.exception.EmptyPatchException;
 import com.example.todo.exception.InvalidDateRangeException;
 import com.example.todo.exception.InvalidFilterException;
 import com.example.todo.exception.InvalidPaginationException;
@@ -89,6 +90,14 @@ public class GlobalExceptionHandler {
         ProblemDetail pd = ProblemDetailFactory.create(400, "INVALID_ID_FORMAT",
                 "Invalid ID format",
                 "Path variable '" + ex.getName() + "' is not a valid UUID.", request);
+        return problemResponse(pd);
+    }
+
+    @ExceptionHandler(EmptyPatchException.class)
+    public ResponseEntity<ProblemDetail> handleEmptyPatch(EmptyPatchException ex,
+                                                           HttpServletRequest request) {
+        ProblemDetail pd = ProblemDetailFactory.create(400, "EMPTY_PATCH",
+                "Empty patch", ex.getMessage(), request);
         return problemResponse(pd);
     }
 

@@ -6,12 +6,12 @@ import jakarta.validation.Payload;
 import java.lang.annotation.*;
 
 @Documented
-@Constraint(validatedBy = ValidTagValidator.class)
-@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.TYPE_USE})
+@Constraint(validatedBy = ValidPatchValidator.class)
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ValidTag {
+public @interface ValidPatch {
 
-    String message() default "tag contains invalid characters";
+    String message() default "Patch body must contain at least one updatable field.";
 
     Class<?>[] groups() default {};
 

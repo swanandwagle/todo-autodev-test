@@ -5,9 +5,11 @@ import com.example.todo.domain.TaskPriority;
 import com.example.todo.domain.TaskStatus;
 import com.example.todo.dto.CreateTaskRequest;
 import com.example.todo.dto.PageResponse;
+import com.example.todo.dto.PatchTaskRequest;
 import com.example.todo.dto.TaskListQuery;
 import com.example.todo.dto.TaskResponse;
 import com.example.todo.dto.UpdateTaskRequest;
+import com.example.todo.exception.EmptyPatchException;
 import com.example.todo.exception.TaskNotFoundException;
 import com.example.todo.exception.VersionConflictException;
 import com.example.todo.repository.TaskQueryRepository;
@@ -137,6 +139,68 @@ public class TaskService {
         task.setPriority(req.getPriority());
         task.setDueDate(req.getDueDate());
         task.setTags(req.getTags() != null ? req.getTags() : new ArrayList<>());
+        task.setStatus(newStatus);
+        task.setUpdatedAt(OffsetDateTime.now(ZoneOffset.UTC));
+
+        if (newStatus == TaskStatus.DONE && currentStatus != TaskStatus.DONE) {
+            task.setCompletedAt(OffsetDateTime.now(ZoneOffset.UTC));
+        } else if (newStatus != TaskStatus.DONE) {
+            task.setCompletedAt(null);
+        }
+
+        Task saved = taskRepository.save(task);
+        return toResponse(saved);
+    }
+
+    @Transactional
+    public TaskResponse patch(UUID id, PatchTaskRequest req) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new TaskNotFoundException(id));
+
+        boolean hasUpdatableField =
+                req.getTitle().isPresent() ||
+                req.getDescription().isPresent() ||
+                req.getStatus().isPresent() ||
+                req.getPriority().isPresent() ||
+                req.getDueDate().isPresent() ||
+                req.getTags().isPresent();
+
+        if (!hasUpdatableField) {
+            throw new EmptyPatchException();
+        }
+
+        if (req.getVersion().isPresent() && req.getVersion().get() != null) {
+            long requestedVersion = req.getVersion().get();
+            if (!task.getVersion().equals(requestedVersion)) {
+                throw new VersionConflictException(id, requestedVersion, task.getVersion());
+            }
+        }
+
+        TaskStatus currentStatus = task.getStatus();
+        TaskStatus newStatus = currentStatus;
+
+        if (req.getStatus().isPresent()) {
+            newStatus = req.getStatus().get();
+            transitionValidator.validate(currentStatus, newStatus);
+        }
+
+        if (req.getTitle().isPresent()) {
+            task.setTitle(req.getTitle().get());
+        }
+        if (req.getDescription().isPresent()) {
+            task.setDescription(req.getDescription().get());
+        }
+        if (req.getPriority().isPresent()) {
+            task.setPriority(req.getPriority().get());
+        }
+        if (req.getDueDate().isPresent()) {
+            task.setDueDate(req.getDueDate().get());
+        }
+        if (req.getTags().isPresent()) {
+            List<String> newTags = req.getTags().get();
+            task.setTags(newTags != null ? newTags : new ArrayList<>());
+        }
+
         task.setStatus(newStatus);
         task.setUpdatedAt(OffsetDateTime.now(ZoneOffset.UTC));
 

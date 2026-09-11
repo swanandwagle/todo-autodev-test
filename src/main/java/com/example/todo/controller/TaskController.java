@@ -4,6 +4,7 @@ import com.example.todo.domain.TaskPriority;
 import com.example.todo.domain.TaskStatus;
 import com.example.todo.dto.CreateTaskRequest;
 import com.example.todo.dto.PageResponse;
+import com.example.todo.dto.PatchTaskRequest;
 import com.example.todo.dto.TaskListQuery;
 import com.example.todo.dto.TaskResponse;
 import com.example.todo.dto.UpdateTaskRequest;
@@ -133,6 +134,31 @@ public class TaskController {
         TaskResponse response = taskService.create(request);
         URI location = ucb.path("/api/v1/tasks/{id}").buildAndExpand(response.getId()).toUri();
         return ResponseEntity.created(location).body(response);
+    }
+
+    @Operation(summary = "Partially update a task (JSON Merge Patch)")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Task partially updated",
+                content = @Content(mediaType = "application/json",
+                        schema = @Schema(implementation = TaskResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Validation failed, empty patch, or malformed request",
+                content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(responseCode = "404", description = "Task not found",
+                content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(responseCode = "409", description = "Version conflict or invalid status transition",
+                content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(responseCode = "413", description = "Payload too large",
+                content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(responseCode = "415", description = "Unsupported media type",
+                content = @Content(mediaType = "application/problem+json"))
+    })
+    @PatchMapping(value = "/{id}",
+            consumes = {"application/json", "application/merge-patch+json"},
+            produces = "application/json")
+    public ResponseEntity<TaskResponse> patch(
+            @Parameter(description = "Task UUID") @PathVariable UUID id,
+            @Valid @RequestBody PatchTaskRequest request) {
+        return ResponseEntity.ok(taskService.patch(id, request));
     }
 
     @Operation(summary = "Replace a task (full update)")
