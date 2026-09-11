@@ -20,7 +20,7 @@ import java.io.IOException;
 @Component
 public class RequestSizeLimitFilter extends OncePerRequestFilter {
 
-    static final long MAX_BYTES = 65_536L;
+    public static final long MAX_BYTES = 65_536L;
     private final ObjectMapper objectMapper;
 
     public RequestSizeLimitFilter(ObjectMapper objectMapper) {
