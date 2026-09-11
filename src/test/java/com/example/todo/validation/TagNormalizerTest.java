@@ -2,6 +2,7 @@ package com.example.todo.validation;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,7 +37,7 @@ class TagNormalizerTest {
 
     @Test
     void nullElementsSkipped() {
-        assertEquals(List.of("finance"), TagNormalizer.normalize(List.of("finance", null)));
+        assertEquals(List.of("finance"), TagNormalizer.normalize(Arrays.asList("finance", null)));
     }
 
     @Test
