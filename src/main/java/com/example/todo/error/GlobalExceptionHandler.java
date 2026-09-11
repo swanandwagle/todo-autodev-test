@@ -13,11 +13,13 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -65,10 +67,12 @@ public class GlobalExceptionHandler {
             return problemResponse(pd);
         }
 
-        String detail = "The request body could not be parsed.";
+        String detail;
         if (cause instanceof InvalidFormatException ife) {
             detail = "Invalid value '" + ife.getValue() + "' for field '" +
                      fieldPath(ife) + "'.";
+        } else {
+            detail = ex.getMessage() != null ? ex.getMessage() : "The request body could not be parsed.";
         }
         ProblemDetail pd = ProblemDetailFactory.create(400, "MALFORMED_REQUEST",
                 "Malformed request", detail, request);
@@ -157,6 +161,22 @@ public class GlobalExceptionHandler {
         ProblemDetail pd = ProblemDetailFactory.create(409, "INVALID_STATUS_TRANSITION",
                 "Invalid status transition", ex.getMessage(), request);
         return problemResponse(pd);
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ProblemDetail> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex,
+                                                                 HttpServletRequest request) {
+        ProblemDetail pd = ProblemDetailFactory.create(405, "METHOD_NOT_ALLOWED",
+                "Method not allowed",
+                "HTTP method '" + ex.getMethod() + "' is not supported for this endpoint.", request);
+        HttpHeaders headers = new HttpHeaders();
+        if (ex.getSupportedHttpMethods() != null) {
+            headers.setAllow(ex.getSupportedHttpMethods());
+        }
+        return ResponseEntity.status(pd.getStatus())
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(pd);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
