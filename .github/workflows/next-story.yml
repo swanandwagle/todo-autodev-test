@@ -19,6 +19,7 @@ jobs:
       ORCHESTRATOR: C:\Projects\ai-delivery-orchestrator
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       CLAUDE_CMD: C:\actions-runner\claude.exe
+      CLAUDE_CONFIG_DIR: C:\Users\Swanand Wagle\.claude
     steps:
       - uses: actions/checkout@v4
 
