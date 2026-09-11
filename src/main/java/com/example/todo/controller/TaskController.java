@@ -183,4 +183,19 @@ public class TaskController {
             @Valid @RequestBody UpdateTaskRequest request) {
         return ResponseEntity.ok(taskService.replace(id, request));
     }
+
+    @Operation(summary = "Delete a task by ID")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Task deleted successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid ID format",
+                content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(responseCode = "404", description = "Task not found",
+                content = @Content(mediaType = "application/problem+json"))
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(
+            @Parameter(description = "Task UUID") @PathVariable UUID id) {
+        taskService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 }

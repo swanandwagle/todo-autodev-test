@@ -214,6 +214,14 @@ public class TaskService {
         return toResponse(saved);
     }
 
+    @Transactional
+    public void delete(UUID id) {
+        if (!taskRepository.existsById(id)) {
+            throw new TaskNotFoundException(id);
+        }
+        taskRepository.deleteById(id);
+    }
+
     public static TaskResponse toResponse(Task task) {
         TaskResponse r = new TaskResponse();
         r.setId(task.getId());
